@@ -1,0 +1,6 @@
+@FileBrowser.Server_HostAddress = http://localhost:5188
+
+GET {{FileBrowser.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

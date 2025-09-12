@@ -55,10 +55,10 @@ public class DirectoryService : IDirectoryService
         if (subDirectories?.Length > 0)
         {
             var subs = subDirectories
-                .Select(sd => new DirectoryItemDto
+                .Select(subDirectory => new DirectoryItemDto
                 {
-                    Name = sd.Split("\\")[^1],
-                    Path = GetSubDirectoryPath(sd),
+                    Name = subDirectory.Split("\\")[^1],
+                    Path = GetSubDirectoryPath(subDirectory),
                     IsDirectory = true
                 })
                 .ToList();
@@ -71,10 +71,10 @@ public class DirectoryService : IDirectoryService
         if (directoryFiles?.Length > 0)
         {
             var files = directoryFiles
-                .Select(file => new DirectoryItemDto
+                .Select(directoryFile => new DirectoryItemDto
                 {
-                    Name = file.Split("\\")[^1],
-                    Path = file
+                    Name = directoryFile.Split("\\")[^1],
+                    Path = GetSubDirectoryPath(directoryFile)
                 })
                 .ToList();
 

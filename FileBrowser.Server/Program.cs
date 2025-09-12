@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<IDirectoryService, DirectoryService>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
 

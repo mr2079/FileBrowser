@@ -18,15 +18,13 @@ export default function DirectoryListComponent({
         <div className="file-item-changed pb-2">Changed</div>
       </div>
 
-      {previousDirectory ? (
+      {previousDirectory && (
         <div className="file-item">
           <div className="file-item-icon file-item-level-up fas fa-level-up-alt text-secondary"></div>
           <Link className="file-item-name" to={previousDirectory ?? "/"}>
             ..
           </Link>
         </div>
-      ) : (
-        <></>
       )}
 
       {items.map((item, index) => (

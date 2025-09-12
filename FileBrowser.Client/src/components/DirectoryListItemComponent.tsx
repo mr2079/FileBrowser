@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import environment from "../environment";
-import { useState } from "react";
+import useFetch from "../hooks/useFetch";
 
 export type DirectoryItem = {
   name: string;
@@ -13,21 +13,16 @@ type Props = {
 };
 
 export default function DirectoryListItemComponent({ item }: Props) {
-  const [_, setError] = useState<string | null>(null);
+  const { data: blob, fetchData } = useFetch<Blob>({
+    absolutePath: environment.GET_FILE_PATH,
+    queryParams: { path: item.path, name: item.name },
+    responseType: "blob",
+  });
 
   const downloadFile = async (item: DirectoryItem) => {
     if (item.isDirectory) return;
-    const url = new URL(
-        environment.BASE_URL + environment.GET_FILE_PATH
-      );
-      url.searchParams.append("path", item.path);
-      url.searchParams.append("name", item.name);
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-        const blob = await response.blob();
+    fetchData().then(() => {
+      if (blob) {
         const fileUrl = URL.createObjectURL(blob);
 
         const downloadLink = document.createElement("a");
@@ -35,14 +30,13 @@ export default function DirectoryListItemComponent({ item }: Props) {
         downloadLink.download = item.name;
         document.body.appendChild(downloadLink);
         downloadLink.click();
-        
+
         downloadLink.remove();
         URL.revokeObjectURL(fileUrl);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Unknown error");
       }
-  }
-  
+    });
+  };
+
   return (
     <div className="file-item" title={item.name}>
       <div className="file-item-select-bg bg-primary"></div>

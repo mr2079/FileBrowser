@@ -1,8 +1,9 @@
-import { useParams } from "react-router";
 import DirectoryListComponent from "../components/DirectoryListComponent";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import environment from "../environment";
 import type { DirectoryItem } from "../components/DirectoryListItemComponent";
+import useDirectoryPath from "../hooks/useDirectoryPath";
+import useFetch from "../hooks/useFetch";
 
 type Directory = {
   name: string;
@@ -12,31 +13,14 @@ type Directory = {
 };
 
 export default function DirectoryPage() {
-  const { "*": urlPath } = useParams();
-  const path = urlPath ? `/${decodeURIComponent(urlPath)}` : "/";
-  const pathArray = path.substring(1).split("/");
-
-  const [data, setData] = useState<Directory | null>(null);
-  const [_, setError] = useState<string | null>(null);
+  const { urlPath, directoryPath } = useDirectoryPath();
+  const { data, fetchData } = useFetch<Directory>({
+    absolutePath: environment.GET_DIRECTORY_PATH,
+    queryParams: { "path": directoryPath }
+  });
+  const pathArray = directoryPath.substring(1).split("/");
 
   useEffect(() => {
-    const fetchData = async () => {
-      const url = new URL(
-        environment.BASE_URL + environment.GET_DIRECTORY_PATH
-      );
-      url.searchParams.append("path", path);
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-        const directory: Directory = await response.json();
-        setData(directory);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      }
-    };
-
     fetchData();
   }, [urlPath]);
 

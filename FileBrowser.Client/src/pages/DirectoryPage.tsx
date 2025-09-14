@@ -16,7 +16,7 @@ export default function DirectoryPage() {
   const { urlPath, directoryPath } = useDirectoryPath();
   const { data, fetchData } = useFetch<Directory>({
     absolutePath: environment.GET_DIRECTORY_PATH,
-    queryParams: { "path": directoryPath }
+    queryParams: { path: directoryPath },
   });
   const pathArray = directoryPath.substring(1).split("/");
 
@@ -36,7 +36,7 @@ export default function DirectoryPage() {
               </li>
             ) : (
               <li key={index} className="breadcrumb-item">
-                <a href="javascript:void(0)">{p}</a>
+                <a href="#">{p}</a>
               </li>
             );
           })}
@@ -45,13 +45,11 @@ export default function DirectoryPage() {
         <hr className="mt-2" />
       </div>
 
-      {data ? (
+      {data && (
         <DirectoryListComponent
           previousDirectory={data.previousDirectory}
           items={data.items}
         />
-      ) : (
-        <></>
       )}
     </>
   );

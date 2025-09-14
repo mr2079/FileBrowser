@@ -1,17 +1,22 @@
-import { Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
 
 import DirectoryPage from "./pages/DirectoryPage";
+import MainLayout from "./pages/layouts/MainLayout";
+import { CommandContextProvider } from "./contexts/CommandContext";
 
 import "./App.css";
-import MainLayout from "./pages/layouts/MainLayout";
 
 function App() {
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        <Route index path="*" element={<DirectoryPage />} />
-      </Route>
-    </Routes>
+    <CommandContextProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route index path="*" element={<DirectoryPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </CommandContextProvider>
   );
 }
 

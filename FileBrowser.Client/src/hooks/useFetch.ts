@@ -22,7 +22,7 @@ export default function useFetch<T>({
     const [loading, setLoading] = useState<boolean>(immediate);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async () : Promise<T | null> => {
         setLoading(true);
         setError(null);
 
@@ -53,11 +53,13 @@ export default function useFetch<T>({
             }
             const data: T = result;
             setData(data);
+            return data;
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setLoading(false);
         }
+        return null;
     }, [absolutePath, queryParams, options, responseType]);
 
     useEffect(() => {

@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import environment from "../environment";
 import useFetch from "../hooks/useFetch";
 import useCommandContext from "../hooks/useCommandContext";
-import type { ChangeEvent } from "react";
+import { type ChangeEvent } from "react";
 
 export type DirectoryItem = {
   name: string;
@@ -15,14 +15,10 @@ type Props = {
 };
 
 export default function DirectoryListItemComponent({ item }: Props) {
-  const { 
-    commandMode,
-    setCommandMode,
-    selectedItems,
-    setSelectedItems
-  } = useCommandContext();
+  const { commandMode, setCommandMode, selectedItems, setSelectedItems } =
+    useCommandContext();
 
-  const { data: blob, fetchData } = useFetch<Blob>({
+  const { fetchData } = useFetch<Blob>({
     absolutePath: environment.GET_FILE_PATH,
     queryParams: { path: item.path, name: item.name },
     responseType: "blob",
@@ -30,37 +26,36 @@ export default function DirectoryListItemComponent({ item }: Props) {
 
   const downloadFile = async (item: DirectoryItem) => {
     if (item.isDirectory) return;
-    fetchData().then(() => {
-      if (blob) {
-        const fileUrl = URL.createObjectURL(blob);
+    const blob = await fetchData();
+    if (blob) {
+      const fileUrl = URL.createObjectURL(blob);
 
-        const downloadLink = document.createElement("a");
-        downloadLink.href = fileUrl;
-        downloadLink.download = item.name;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
+      const downloadLink = document.createElement("a");
+      downloadLink.href = fileUrl;
+      downloadLink.download = item.name;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
 
-        downloadLink.remove();
-        URL.revokeObjectURL(fileUrl);
-      }
-    });
+      downloadLink.remove();
+      URL.revokeObjectURL(fileUrl);
+    }
   };
 
-  const toggleCheckbox = (path: string) : boolean => {
+  const toggleCheckbox = (path: string): boolean => {
     return selectedItems?.includes(path) ?? false;
-  }
+  };
 
   const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { checked, value } = event.target;
     if (checked) {
-      setSelectedItems(prev => {
+      setSelectedItems((prev) => {
         const arr = [...(prev ?? []), value];
         setCommandMode("select");
         return arr;
       });
     } else {
-      setSelectedItems(prev => {
-        let arr = prev?.filter(p => p !== value);
+      setSelectedItems((prev) => {
+        let arr = prev?.filter((p) => p !== value);
         if (arr?.length == 0) {
           arr = undefined;
           setCommandMode(null);
@@ -68,7 +63,7 @@ export default function DirectoryListItemComponent({ item }: Props) {
         return arr;
       });
     }
-  }
+  };
 
   return (
     <div className="file-item" title={item.name}>
@@ -76,10 +71,13 @@ export default function DirectoryListItemComponent({ item }: Props) {
         <>
           <div className="file-item-select-bg bg-primary"></div>
           <label className="file-item-checkbox custom-control custom-checkbox">
-            <input type="checkbox" className="custom-control-input" 
+            <input
+              type="checkbox"
+              className="custom-control-input"
               checked={toggleCheckbox(item.path)}
               value={item.path}
-              onChange={handleCheckboxChange} />
+              onChange={handleCheckboxChange}
+            />
             <span className="custom-control-label"></span>
           </label>
         </>

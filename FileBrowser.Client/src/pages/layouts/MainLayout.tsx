@@ -1,16 +1,17 @@
-import { Outlet, useNavigate } from "react-router";
+import { Outlet } from "react-router";
 import useCommandContext from "../../hooks/useCommandContext";
-import { formatString } from "../../utilities/StringUtils";
 import environment from "../../environment";
 import axios from "axios";
+import useDirectoryPath from "../../hooks/useDirectoryPath";
 
 type FileCommandRequest = {
+  commandType: string,
   to: string,
   items: string[]
 }
 
 export default function MainLayout() {
-  const navigate = useNavigate();
+  const { directoryPath } = useDirectoryPath(); 
   const { 
     commandMode,
     setCommandMode,
@@ -25,19 +26,17 @@ export default function MainLayout() {
 
   const handleCommand = async () => {
     const commandType = commandMode!.toString();
-    console.log(commandType);
-    const requestPath = formatString(environment.FILE_COMMAND_PATH, commandType);
-    console.log(requestPath);
     const body: FileCommandRequest = {
-      to: "",
-      items: [
-
-      ]
+      commandType,
+      to: directoryPath,
+      items: [...selectedItems!]
     };
-    axios.post(requestPath, body, {
+    axios.post(environment.FILE_COMMAND_PATH, body, {
       baseURL: environment.BASE_URL
     }).then(({ status, data }) => {
-      if (status != 200) return;
+      if (status != 200 || !data) return;
+      handleClear();
+      location.reload();
     });
   }
 
@@ -86,7 +85,8 @@ export default function MainLayout() {
             {selectedItems &&
               (commandMode === "move" || commandMode === "copy") && (
                 <>
-                  <button type="button" className="btn btn-success mr-2">
+                  <button type="button" className="btn btn-success mr-2"
+                    onClick={handleCommand}>
                     {commandMode === "move" ? "Move" : "Copy"} here
                   </button>
                   <button type="button" className="btn btn-danger mr-2"

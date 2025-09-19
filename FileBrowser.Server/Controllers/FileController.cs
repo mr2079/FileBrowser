@@ -1,5 +1,9 @@
-﻿using System.Net.Mime;
+﻿using System.Data;
+using System.Net.Mime;
+using FileBrowser.Server.Models.DTOs;
+using FileBrowser.Server.Models.Requests;
 using FileBrowser.Server.Services;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileBrowser.Server.Controllers;
@@ -32,5 +36,15 @@ public class FileController : ControllerBase
         {
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
+    }
+
+    [HttpPost("command")]
+    public async Task<IActionResult> CommandAsync([FromBody] FileCommandRequest request)
+    {
+        var dto = request.Adapt<FileCommandDto>();
+
+        var result = await _fileService.CommandAsync(dto);
+
+        return Ok(result);
     }
 }

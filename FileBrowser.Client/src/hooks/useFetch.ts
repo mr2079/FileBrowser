@@ -3,31 +3,45 @@ import environment from "../environment";
 
 type QueryParams = Record<string, string | number | boolean | null>;
 type ResponseType = "json" | "text" | "blob";
-type Input = {
-    absolutePath: string,
+type UseFetchInput = {
+    absolutePath?: string,
     options?: RequestInit,
     immediate?: boolean,
     queryParams?: QueryParams,
     responseType?: ResponseType
 }
+type UseFetchOutput<TResponse> = {
+    data: TResponse | null,
+    loading: boolean,
+    error: string | null,
+    fetchData: (
+        requestPath: string | undefined,
+        requestOptions: RequestInit | undefined) => Promise<TResponse | null>
+}
 
-export default function useFetch<T>({
+export default function useFetch<TResponse>({
     absolutePath,
     options = {},
     immediate = false,
     queryParams,
     responseType = "json"
-} : Input) {
-    const [data, setData] = useState<T | null>(null);
+} : UseFetchInput) : UseFetchOutput<TResponse> {
+    const [data, setData] = useState<TResponse | null>(null);
     const [loading, setLoading] = useState<boolean>(immediate);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = useCallback(async () : Promise<T | null> => {
+    const fetchData = useCallback(async (
+            requestPath: string | undefined = undefined,
+            requestOptions: RequestInit | undefined = undefined) : Promise<TResponse | null> => {
         setLoading(true);
         setError(null);
 
         try {
-            const url = new URL(environment.BASE_URL + absolutePath);
+            if (!absolutePath && !requestPath) {
+                throw new Error("Request path not set!");
+            }
+            const path = requestPath! || absolutePath!;
+            const url = new URL(environment.BASE_URL + path);
             if (queryParams) {
                 Object
                     .entries(queryParams)
@@ -35,7 +49,12 @@ export default function useFetch<T>({
                         url.searchParams.append(key, String(value));
                     });
             }
-            const response = await fetch(url, options);
+            let response: Response;
+            if (requestOptions) {
+                response = await fetch(url, requestOptions);
+            } else {
+                response = await fetch(url, options);
+            }
             if (!response.ok) {
                 throw new Error(`Error: ${response.status} ${response.statusText}`);
             }
@@ -51,7 +70,7 @@ export default function useFetch<T>({
                     result = await response.blob();
                     break;
             }
-            const data: T = result;
+            const data: TResponse = result;
             setData(data);
             return data;
         } catch (err: unknown) {

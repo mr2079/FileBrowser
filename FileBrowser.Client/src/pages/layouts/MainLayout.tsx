@@ -1,24 +1,44 @@
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import useCommandContext from "../../hooks/useCommandContext";
+import { formatString } from "../../utilities/StringUtils";
+import environment from "../../environment";
+import axios from "axios";
+
+type FileCommandRequest = {
+  to: string,
+  items: string[]
+}
 
 export default function MainLayout() {
-  const { commandMode, setCommandMode, selectedItems, setSelectedItems } = useCommandContext();
-
-  const handleMove = () => {
-    setCommandMode("move");
-  };
-
-  const handleCopy = () => {
-    setCommandMode("copy");
-  };
-
-  const handleCancel = () => {
-    setCommandMode(null);
-  }
+  const navigate = useNavigate();
+  const { 
+    commandMode,
+    setCommandMode,
+    selectedItems,
+    setSelectedItems
+  } = useCommandContext();
 
   const handleClear = () => {
     setCommandMode(null);
     setSelectedItems(undefined);
+  }
+
+  const handleCommand = async () => {
+    const commandType = commandMode!.toString();
+    console.log(commandType);
+    const requestPath = formatString(environment.FILE_COMMAND_PATH, commandType);
+    console.log(requestPath);
+    const body: FileCommandRequest = {
+      to: "",
+      items: [
+
+      ]
+    };
+    axios.post(requestPath, body, {
+      baseURL: environment.BASE_URL
+    }).then(({ status, data }) => {
+      if (status != 200) return;
+    });
   }
 
   return (
@@ -44,13 +64,13 @@ export default function MainLayout() {
                 <div className="dropdown-menu">
                   <a
                     className="dropdown-item cursor-pointer"
-                    onClick={handleMove}
+                    onClick={() => setCommandMode("move")}
                   >
                     Move
                   </a>
                   <a
                     className="dropdown-item cursor-pointer"
-                    onClick={handleCopy}
+                    onClick={() => setCommandMode("copy")}
                   >
                     Copy
                   </a>
@@ -70,7 +90,7 @@ export default function MainLayout() {
                     {commandMode === "move" ? "Move" : "Copy"} here
                   </button>
                   <button type="button" className="btn btn-danger mr-2"
-                    onClick={handleCancel}>
+                    onClick={() => setCommandMode(null)}>
                     Cancel
                   </button>
                 </>

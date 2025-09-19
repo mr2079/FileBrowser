@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import environment from "../environment";
-import useFetch from "../hooks/useFetch";
 import useCommandContext from "../hooks/useCommandContext";
 import { type ChangeEvent } from "react";
+import axios from "axios";
 
 export type DirectoryItem = {
   name: string;
@@ -18,27 +18,32 @@ export default function DirectoryListItemComponent({ item }: Props) {
   const { commandMode, setCommandMode, selectedItems, setSelectedItems } =
     useCommandContext();
 
-  const { fetchData } = useFetch<Blob>({
-    absolutePath: environment.GET_FILE_PATH,
-    queryParams: { path: item.path, name: item.name },
-    responseType: "blob",
-  });
-
-  const downloadFile = async (item: DirectoryItem) => {
+  const downloadFile = (item: DirectoryItem) => {
     if (item.isDirectory) return;
-    const blob = await fetchData();
-    if (blob) {
-      const fileUrl = URL.createObjectURL(blob);
+    axios
+      .get<Blob | null>(environment.GET_FILE_PATH, {
+        baseURL: environment.BASE_URL,
+        params: {
+          path: item.path,
+          name: item.name,
+        },
+        responseType: "blob",
+      })
+      .then(({ status, data }) => {
+        if (status != 200) return;
+        if (data) {
+          const fileUrl = URL.createObjectURL(data);
 
-      const downloadLink = document.createElement("a");
-      downloadLink.href = fileUrl;
-      downloadLink.download = item.name;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
+          const downloadLink = document.createElement("a");
+          downloadLink.href = fileUrl;
+          downloadLink.download = item.name;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
 
-      downloadLink.remove();
-      URL.revokeObjectURL(fileUrl);
-    }
+          downloadLink.remove();
+          URL.revokeObjectURL(fileUrl);
+        }
+      });
   };
 
   const toggleCheckbox = (path: string): boolean => {
@@ -67,7 +72,7 @@ export default function DirectoryListItemComponent({ item }: Props) {
 
   return (
     <div className="file-item" title={item.name}>
-      {(!commandMode || commandMode == "select") && (
+      {!item.isDirectory && (!commandMode || commandMode == "select") && (
         <>
           <div className="file-item-select-bg bg-primary"></div>
           <label className="file-item-checkbox custom-control custom-checkbox">
@@ -113,12 +118,16 @@ export default function DirectoryListItemComponent({ item }: Props) {
             {/* <a className="dropdown-item" href="#">
               Rename
             </a> */}
-            <a className="dropdown-item" href="#">
-              Move
-            </a>
-            <a className="dropdown-item" href="#">
-              Copy
-            </a>
+            {!item.isDirectory && (
+              <>
+                <a className="dropdown-item" href="#">
+                  Move
+                </a>
+                <a className="dropdown-item" href="#">
+                  Copy
+                </a>
+              </>
+            )}
             {/* <a className="dropdown-item" href="#">
               Remove
             </a> */}

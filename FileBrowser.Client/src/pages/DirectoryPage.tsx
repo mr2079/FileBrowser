@@ -1,9 +1,9 @@
 import DirectoryListComponent from "../components/DirectoryListComponent";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import environment from "../environment";
 import type { DirectoryItem } from "../components/DirectoryListItemComponent";
 import useDirectoryPath from "../hooks/useDirectoryPath";
-import useFetch from "../hooks/useFetch";
+import axios from "axios";
 
 type Directory = {
   name: string;
@@ -14,13 +14,21 @@ type Directory = {
 
 export default function DirectoryPage() {
   const { urlPath, directoryPath } = useDirectoryPath();
-  const { data, fetchData } = useFetch<Directory>({
-    absolutePath: environment.GET_DIRECTORY_PATH,
-    queryParams: { path: directoryPath },
-  });
+  const [directoryInfo, setDirectoryInfo] = useState<Directory | null>(null);
   const pathArray = directoryPath.substring(1).split("/");
 
   useEffect(() => {
+    const fetchData = () => {
+      axios.get<Directory | null>( environment.GET_DIRECTORY_PATH, {
+        baseURL: environment.BASE_URL,
+        params: {
+          path: directoryPath
+        }
+      }).then(({ status, data }) => {
+        if (status != 200) return;
+        setDirectoryInfo(data);
+      });
+    }
     fetchData();
   }, [urlPath]);
 
@@ -45,10 +53,10 @@ export default function DirectoryPage() {
         <hr className="mt-2" />
       </div>
 
-      {data && (
+      {directoryInfo && (
         <DirectoryListComponent
-          previousDirectory={data.previousDirectory}
-          items={data.items}
+          previousDirectory={directoryInfo.previousDirectory}
+          items={directoryInfo.items}
         />
       )}
     </>

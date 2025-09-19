@@ -15,8 +15,12 @@ type Props = {
 };
 
 export default function DirectoryListItemComponent({ item }: Props) {
-  const { commandMode, setCommandMode, selectedItems, setSelectedItems } =
-    useCommandContext();
+  const { 
+    commandMode,
+    setCommandMode,
+    selectedItems,
+    setSelectedItems,
+  } = useCommandContext();
 
   const downloadFile = (item: DirectoryItem) => {
     if (item.isDirectory) return;
@@ -70,6 +74,14 @@ export default function DirectoryListItemComponent({ item }: Props) {
     }
   };
 
+  const handleFileCommand = (
+    commandType: "move" | "copy",
+    path: string
+  ) => {
+    setSelectedItems([path]);
+    setCommandMode(commandType);
+  }
+
   return (
     <div className="file-item" title={item.name}>
       {!item.isDirectory && (!commandMode || commandMode == "select") && (
@@ -120,10 +132,12 @@ export default function DirectoryListItemComponent({ item }: Props) {
             </a> */}
             {!item.isDirectory && (
               <>
-                <a className="dropdown-item" href="#">
+                <a className="dropdown-item"
+                  onClick={() => handleFileCommand("move", item.path)}>
                   Move
                 </a>
-                <a className="dropdown-item" href="#">
+                <a className="dropdown-item"
+                  onClick={() => handleFileCommand("copy", item.path)}>
                   Copy
                 </a>
               </>

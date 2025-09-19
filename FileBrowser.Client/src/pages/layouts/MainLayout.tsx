@@ -16,7 +16,7 @@ export default function MainLayout() {
     commandMode,
     setCommandMode,
     selectedItems,
-    setSelectedItems
+    setSelectedItems,
   } = useCommandContext();
 
   const handleClear = () => {

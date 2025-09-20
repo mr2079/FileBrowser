@@ -7,6 +7,8 @@ public interface IFileService
 {
     Task<FileStream?> GetFileAsync(string filePath);
     Task<bool> CommandAsync(FileCommandDto dto);
+    Task<bool> RenameAsync(RenameDto dto);
+    Task<bool> RemoveAsync(RemoveDto dto);
 }
 
 public class FileService : IFileService
@@ -58,6 +60,65 @@ public class FileService : IFileService
                         break;
                     default:
                         continue;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> RenameAsync(RenameDto dto)
+    {
+        try
+        {
+            string baseDirectoryPath = GetBaseDirectory();
+
+            string relativePath = dto.Path.TrimStart('/');
+
+            string sourceFullPath = Path.Combine(baseDirectoryPath, relativePath);
+
+            if (!File.Exists(sourceFullPath)) return false;
+
+            string filePath = string.Join("\\", relativePath.Split('/')[..^1]);
+
+            string fileExtension = relativePath.Split('.')[^1];
+
+            string newFileName = $"{dto.NewName}.{fileExtension}";
+
+            string destFullPath = Path.Combine(baseDirectoryPath, filePath, newFileName);
+
+            File.Move(sourceFullPath, destFullPath);
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveAsync(RemoveDto dto)
+    {
+        try
+        {
+            string baseDirectoryPath = GetBaseDirectory();
+
+            foreach (var path in dto.Pathes)
+            {
+                string fullPath = Path.Combine(baseDirectoryPath, path.TrimStart('/'));
+
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
+
+                if (Directory.Exists(fullPath))
+                {
+                    Directory.Delete(fullPath);
                 }
             }
 

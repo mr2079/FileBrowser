@@ -47,4 +47,24 @@ public class FileController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPut("rename")]
+    public async Task<IActionResult> RenameAsync([FromBody] RenameRequest request)
+    {
+        var dto = request.Adapt<RenameDto>();
+
+        var result = await _fileService.RenameAsync(dto);
+
+        return Ok(result);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> RemoveAsync([FromBody] RemoveRequest request)
+    {
+        var dto = request.Adapt<RemoveDto>();
+
+        var result = await _fileService.RemoveAsync(dto);
+
+        return Ok(result);
+    }
 }

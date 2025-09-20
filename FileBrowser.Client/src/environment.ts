@@ -4,7 +4,7 @@ const environment = {
   GET_FILE_PATH: "/api/v1/files",
   FILE_COMMAND_PATH: "/api/v1/files/command",
   FILE_RENAME_PATH: "/api/v1/files/rename",
-  FILE_REMOVE_PATH: "/api/v1/files/remove",
+  FILE_REMOVE_PATH: "/api/v1/files",
 };
 
 export default environment;

@@ -3,6 +3,8 @@ import useCommandContext from "../../hooks/useCommandContext";
 import environment from "../../environment";
 import axios from "axios";
 import useDirectoryPath from "../../hooks/useDirectoryPath";
+import { useState } from "react";
+import ModalComponent from "../../components/ModalComponent";
 
 type FileCommandRequest = {
   commandType: string,
@@ -17,6 +19,7 @@ export default function MainLayout() {
     setCommandMode,
     selectedItems,
     setSelectedItems,
+    remove,
   } = useCommandContext();
 
   const handleClear = () => {
@@ -40,91 +43,126 @@ export default function MainLayout() {
     });
   }
 
+  const [show, setShow] = useState<boolean>(false);
+
+  const handleRemoveClick = () => {
+    setShow(true);
+  }
+
+  const onRemoveSubmit = async () => {
+    if (!selectedItems) return;
+    const isSuccess = await remove({
+      pathes: [...selectedItems]
+    });
+    if (isSuccess) {
+      onRemoveClose();
+      location.reload();
+    }
+  }
+
+  const onRemoveClose = () => {
+    setShow(false);
+  }
+
   return (
-    <div className="container flex-grow-1 light-style container-p-y">
-      <div className="container-m-nx container-m-ny bg-lightest mb-3">
-        <div className="file-manager-actions container-p-x py-2">
-          <div>
-            <button type="button" className="btn btn-primary mr-2" disabled>
-              <i className="ion ion-md-cloud-upload"></i>&nbsp; Upload
-            </button>
-            <button type="button" className="btn btn-secondary icon-btn mr-2" disabled>
-              <i className="ion ion-md-cloud-download"></i>
-            </button>
-            {(!commandMode ||commandMode === "select") && (
-              <div className="btn-group mr-2">
-                <button
-                  type="button"
-                  className="btn btn-default md-btn-flat dropdown-toggle px-2"
-                  data-toggle="dropdown"
-                >
-                  <i className="ion ion-ios-settings"></i>
-                </button>
-                <div className="dropdown-menu">
-                  <a
-                    className="dropdown-item cursor-pointer"
-                    onClick={() => setCommandMode("move")}
+    <>
+      <div className="container flex-grow-1 light-style container-p-y">
+        <div className="container-m-nx container-m-ny bg-lightest mb-3">
+          <div className="file-manager-actions container-p-x py-2">
+            <div>
+              <button type="button" className="btn btn-primary mr-2" disabled>
+                <i className="ion ion-md-cloud-upload"></i>&nbsp; Upload
+              </button>
+              <button type="button" className="btn btn-secondary icon-btn mr-2" disabled>
+                <i className="ion ion-md-cloud-download"></i>
+              </button>
+              {(commandMode === "select") && (
+                <div className="btn-group mr-2">
+                  <button
+                    type="button"
+                    className="btn btn-default md-btn-flat dropdown-toggle px-2"
+                    data-toggle="dropdown"
                   >
-                    Move
-                  </a>
-                  <a
-                    className="dropdown-item cursor-pointer"
-                    onClick={() => setCommandMode("copy")}
-                  >
-                    Copy
-                  </a>
-                  <a className="dropdown-item cursor-pointer">Remove</a>
+                    <i className="ion ion-ios-settings"></i>
+                  </button>
+                  <div className="dropdown-menu">
+                    <a
+                      className="dropdown-item cursor-pointer"
+                      onClick={() => setCommandMode("move")}
+                    >
+                      Move
+                    </a>
+                    <a
+                      className="dropdown-item cursor-pointer"
+                      onClick={() => setCommandMode("copy")}
+                    >
+                      Copy
+                    </a>
+                    <a 
+                      className="dropdown-item cursor-pointer"
+                      onClick={handleRemoveClick}
+                    >
+                      Remove
+                    </a>
+                  </div>
                 </div>
-              </div>
-            )}
-            {(selectedItems?.length ?? 0) > 0 && (
-              <div className="btn btn-outline-danger mr-2" onClick={handleClear}>
-                {selectedItems!.length} item(s) selected
-              </div>
-            )}
-            {selectedItems &&
-              (commandMode === "move" || commandMode === "copy") && (
-                <>
-                  <button type="button" className="btn btn-success mr-2"
-                    onClick={handleCommand}>
-                    {commandMode === "move" ? "Move" : "Copy"} here
-                  </button>
-                  <button type="button" className="btn btn-danger mr-2"
-                    onClick={() => setCommandMode(null)}>
-                    Cancel
-                  </button>
-                </>
               )}
-          </div>
-          <div>
-            <div className="btn-group btn-group-toggle" data-toggle="buttons">
-              <label className="btn btn-default icon-btn md-btn-flat active">
-                {" "}
-                <input
-                  disabled
-                  type="radio"
-                  name="file-manager-view"
-                  value="file-manager-col-view"
-                />{" "}
-                <span className="ion ion-md-apps"></span>{" "}
-              </label>
-              <label className="btn btn-default icon-btn md-btn-flat">
-                {" "}
-                <input
-                  disabled
-                  type="radio"
-                  name="file-manager-view"
-                  value="file-manager-row-view"
-                />{" "}
-                <span className="ion ion-md-menu"></span>{" "}
-              </label>
+              {(selectedItems?.length ?? 0) > 0 && (
+                <div className="btn btn-outline-danger mr-2" onClick={handleClear}>
+                  {selectedItems!.length} item(s) selected
+                </div>
+              )}
+              {selectedItems &&
+                (commandMode === "move" || commandMode === "copy") && (
+                  <>
+                    <button type="button" className="btn btn-success mr-2"
+                      onClick={handleCommand}>
+                      {commandMode === "move" ? "Move" : "Copy"} here
+                    </button>
+                    <button type="button" className="btn btn-danger mr-2"
+                      onClick={() => setCommandMode(null)}>
+                      Cancel
+                    </button>
+                  </>
+                )}
+            </div>
+            <div>
+              <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                <label className="btn btn-default icon-btn md-btn-flat active">
+                  {" "}
+                  <input
+                    disabled
+                    type="radio"
+                    name="file-manager-view"
+                    value="file-manager-col-view"
+                  />{" "}
+                  <span className="ion ion-md-apps"></span>{" "}
+                </label>
+                <label className="btn btn-default icon-btn md-btn-flat">
+                  {" "}
+                  <input
+                    disabled
+                    type="radio"
+                    name="file-manager-view"
+                    value="file-manager-row-view"
+                  />{" "}
+                  <span className="ion ion-md-menu"></span>{" "}
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <hr className="m-0" />
+          <hr className="m-0" />
+        </div>
+        {<Outlet />}
       </div>
-      {<Outlet />}
-    </div>
+      <ModalComponent
+        title="Are you sure?"
+        show={show}
+        onSubmit={onRemoveSubmit}
+        onClose={onRemoveClose}>
+        {""}
+      </ModalComponent>
+    </>
   );
 }

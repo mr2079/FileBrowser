@@ -10,7 +10,7 @@ type CommandContextType = {
   selectedItems: string[] | undefined;
   setSelectedItems: (value: SetStateAction<string[] | undefined>) => void;
   rename: (request: RenameRequest) => Promise<boolean>;
-  remove: (path: string) => Promise<boolean>;
+  remove: (request: RemoveRequest) => Promise<boolean>;
 };
 
 const CommandContext = createContext<CommandContextType | undefined>(undefined);
@@ -24,6 +24,10 @@ type CommandContextProviderType = {
 export type RenameRequest = {
   path: string,
   newName: string
+}
+
+export type RemoveRequest = {
+  pathes: string[],
 }
 
 export function CommandContextProvider({
@@ -43,12 +47,10 @@ export function CommandContextProvider({
     });
   }
 
-  const remove = async (path: string) : Promise<boolean> => {
+  const remove = async (request: RemoveRequest) : Promise<boolean> => {
     return axios.delete<boolean>(environment.FILE_REMOVE_PATH, {
       baseURL: environment.BASE_URL,
-      params: {
-        path
-      }
+      data: request
     }).then(({ status, data }) => {
       if (status != 200 || !data) return false;
       return true;

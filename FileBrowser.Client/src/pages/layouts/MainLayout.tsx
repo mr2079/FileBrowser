@@ -5,17 +5,19 @@ import axios from "axios";
 import useDirectoryPath from "../../hooks/useDirectoryPath";
 import { useState } from "react";
 import ModalComponent from "../../components/ModalComponent";
-import UploadComponent, { type UploadStatus } from "../../components/UploadComponent";
+import UploadComponent, {
+  type UploadStatus,
+} from "../../components/UploadComponent";
 
 type FileCommandRequest = {
-  commandType: string,
-  to: string,
-  items: string[]
-}
+  commandType: string;
+  to: string;
+  items: string[];
+};
 
 export default function MainLayout() {
-  const { directoryPath } = useDirectoryPath(); 
-  const { 
+  const { directoryPath } = useDirectoryPath();
+  const {
     commandMode,
     setCommandMode,
     selectedItems,
@@ -26,54 +28,56 @@ export default function MainLayout() {
   const handleClear = () => {
     setCommandMode(null);
     setSelectedItems(undefined);
-  }
+  };
 
   const handleCommand = async () => {
     const commandType = commandMode!.toString();
     const body: FileCommandRequest = {
       commandType,
       to: directoryPath,
-      items: [...selectedItems!]
+      items: [...selectedItems!],
     };
-    axios.post(environment.FILE_COMMAND_PATH, body, {
-      baseURL: environment.BASE_URL
-    }).then(({ status, data }) => {
-      if (status != 200 || !data) return;
-      handleClear();
-      location.reload();
-    });
-  }
+    axios
+      .post(environment.FILE_COMMAND_PATH, body, {
+        baseURL: environment.BASE_URL,
+      })
+      .then(({ status, data }) => {
+        if (status != 200 || !data) return;
+        handleClear();
+        location.reload();
+      });
+  };
 
   const [showRemoveModal, setShowRemoveModal] = useState<boolean>(false);
 
   const handleRemoveClick = () => {
     setShowRemoveModal(true);
-  }
+  };
 
   const onRemoveSubmit = async () => {
     if (!selectedItems) return;
     const isSuccess = await remove({
-      pathes: [...selectedItems]
+      paths: [...selectedItems],
     });
     if (isSuccess) {
       onRemoveClose();
       location.reload();
     }
-  }
+  };
 
   const onRemoveClose = () => {
     setShowRemoveModal(false);
-  }
+  };
 
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
 
   const handleUploadClick = () => {
     setShowUploadModal(true);
-  }
+  };
 
   const onUploadClose = () => {
     setShowUploadModal(false);
-  }
+  };
 
   const handleUploadStatus = (status: UploadStatus) => {
     console.log(status);
@@ -81,7 +85,33 @@ export default function MainLayout() {
       onUploadClose();
       location.reload();
     }
-  }
+  };
+
+  const handleDownload = () => {
+    if (!selectedItems) return;
+    axios
+      .get<Blob | null>(environment.GET_ZIP_PATH, {
+        baseURL: environment.BASE_URL,
+        params: {
+          paths: [...selectedItems],
+        },
+        paramsSerializer: { indexes: null },
+        responseType: "blob",
+      })
+      .then(({ status, data }) => {
+        if (status != 200 || !data) return;
+        const fileUrl = URL.createObjectURL(data);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = fileUrl;
+        downloadLink.download = `compressed_${Date.now()}.zip`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+
+        downloadLink.remove();
+        URL.revokeObjectURL(fileUrl);
+      });
+  };
 
   return (
     <>
@@ -89,13 +119,23 @@ export default function MainLayout() {
         <div className="container-m-nx container-m-ny bg-lightest mb-3">
           <div className="file-manager-actions container-p-x py-2">
             <div>
-              <button type="button" className="btn btn-primary mr-2" onClick={handleUploadClick}>
+              <button
+                type="button"
+                className="btn btn-primary mr-2"
+                onClick={handleUploadClick}
+              >
                 <i className="ion ion-md-cloud-upload"></i>&nbsp; Upload
               </button>
-              <button type="button" className="btn btn-secondary icon-btn mr-2" disabled>
-                <i className="ion ion-md-cloud-download"></i>
-              </button>
-              {(commandMode === "select") && (
+              {selectedItems && commandMode === "select" && (
+                <button
+                  type="button"
+                  className="btn btn-secondary icon-btn mr-2"
+                  onClick={handleDownload}
+                >
+                  <i className="ion ion-md-cloud-download"></i>
+                </button>
+              )}
+              {commandMode === "select" && (
                 <div className="btn-group mr-2">
                   <button
                     type="button"
@@ -117,7 +157,7 @@ export default function MainLayout() {
                     >
                       Copy
                     </a>
-                    <a 
+                    <a
                       className="dropdown-item cursor-pointer"
                       onClick={handleRemoveClick}
                     >
@@ -127,19 +167,28 @@ export default function MainLayout() {
                 </div>
               )}
               {(selectedItems?.length ?? 0) > 0 && (
-                <div className="btn btn-outline-danger mr-2" onClick={handleClear}>
+                <div
+                  className="btn btn-outline-danger mr-2"
+                  onClick={handleClear}
+                >
                   {selectedItems!.length} item(s) selected
                 </div>
               )}
               {selectedItems &&
                 (commandMode === "move" || commandMode === "copy") && (
                   <>
-                    <button type="button" className="btn btn-success mr-2"
-                      onClick={handleCommand}>
+                    <button
+                      type="button"
+                      className="btn btn-success mr-2"
+                      onClick={handleCommand}
+                    >
                       {commandMode === "move" ? "Move" : "Copy"} here
                     </button>
-                    <button type="button" className="btn btn-danger mr-2"
-                      onClick={() => setCommandMode(null)}>
+                    <button
+                      type="button"
+                      className="btn btn-danger mr-2"
+                      onClick={() => setCommandMode(null)}
+                    >
                       Cancel
                     </button>
                   </>
@@ -179,7 +228,8 @@ export default function MainLayout() {
         title="Are you sure?"
         show={showRemoveModal}
         onSubmit={onRemoveSubmit}
-        onClose={onRemoveClose}>
+        onClose={onRemoveClose}
+      >
         {""}
       </ModalComponent>
       <ModalComponent
@@ -187,8 +237,9 @@ export default function MainLayout() {
         show={showUploadModal}
         hasFooter={false}
         onSubmit={() => {}}
-        onClose={onUploadClose}>
-        <UploadComponent onChangeStatus={handleUploadStatus}/>
+        onClose={onUploadClose}
+      >
+        <UploadComponent onChangeStatus={handleUploadStatus} />
       </ModalComponent>
     </>
   );

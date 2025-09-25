@@ -38,6 +38,26 @@ public class FileController : ControllerBase
         }
     }
 
+    [HttpGet("zip")]
+    public async Task<IActionResult> GetZipAsync([FromQuery] IEnumerable<string> paths)
+    {
+        try
+        {
+            FileStream? stream = await _fileService.GetZipAsync(paths);
+
+            if (stream is null) return NotFound();
+
+            return File(
+                stream,
+                MediaTypeNames.Application.Octet,
+                stream.Name.Split("\\")[^1]);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
     [HttpPost("command")]
     public async Task<IActionResult> CommandAsync([FromBody] FileCommandRequest request)
     {

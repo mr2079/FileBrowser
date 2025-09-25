@@ -2,5 +2,5 @@
 
 public class RemoveRequest
 {
-    public IEnumerable<string> Pathes { get; set; }
+    public IEnumerable<string> Paths { get; set; }
 }

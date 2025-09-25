@@ -1,4 +1,5 @@
-﻿using FileBrowser.Server.Models.DTOs;
+﻿using System.IO.Compression;
+using FileBrowser.Server.Models.DTOs;
 using FileBrowser.Server.Models.Enums;
 
 namespace FileBrowser.Server.Services;
@@ -6,6 +7,7 @@ namespace FileBrowser.Server.Services;
 public interface IFileService
 {
     Task<FileStream?> GetFileAsync(string filePath);
+    Task<FileStream?> GetZipAsync(IEnumerable<string> filePaths);
     Task<bool> CommandAsync(FileCommandDto dto);
     Task<bool> RenameAsync(RenameDto dto);
     Task<bool> RemoveAsync(RemoveDto dto);
@@ -18,6 +20,7 @@ public class FileService : IFileService
     private const string BaseDirectory = "Storage";
     private const string TempDirectoryName = "_temp";
     private const string UploadDirectoryName = "uploads";
+    private const string DownloadDirectoryName = "downloads";
     private readonly string _tempDirectory;
 
     public FileService()
@@ -39,6 +42,39 @@ public class FileService : IFileService
         if (!File.Exists(fullPath)) return null;
 
         return new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+    }
+
+    public async Task<FileStream?> GetZipAsync(IEnumerable<string> filePaths)
+    {
+        string baseDirectory = GetBaseDirectory();
+
+        List<string> fullPaths = filePaths
+            .Select(path => Path.Combine(baseDirectory, path.TrimStart('/')))
+            .ToList();
+
+        string zipDirectoryPath = Path.Combine(_tempDirectory, DownloadDirectoryName);
+        string zipPath = Path.Combine(zipDirectoryPath, $"compressed_{DateTime.Now:yyyyMMddHHmmssffff}.zip");
+
+        if (!Directory.Exists(zipDirectoryPath))
+            Directory.CreateDirectory(zipDirectoryPath);
+
+        await using (FileStream zipStream = new(zipPath, FileMode.Create))
+        {
+            using ZipArchive archive = new(zipStream, ZipArchiveMode.Create);
+
+            foreach (var path in fullPaths)
+            {
+                var entry = archive.CreateEntry(Path.GetFileName(path), CompressionLevel.Fastest);
+                await using var entryStream = entry.Open();
+                await using FileStream fileStream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                await fileStream.CopyToAsync(entryStream);
+            }
+        }
+
+        if (!File.Exists(zipPath)) return null;
+
+        return new FileStream(zipPath, FileMode.Open, FileAccess.Read);
     }
 
     public async Task<bool> CommandAsync(FileCommandDto dto)
@@ -118,7 +154,7 @@ public class FileService : IFileService
         {
             string baseDirectoryPath = GetBaseDirectory();
 
-            foreach (var path in dto.Pathes)
+            foreach (var path in dto.Paths)
             {
                 string fullPath = Path.Combine(baseDirectoryPath, path.TrimStart('/'));
 

@@ -2,5 +2,5 @@
 
 public class RemoveDto
 {
-    public IEnumerable<string> Pathes { get; set; }
+    public IEnumerable<string> Paths { get; set; }
 }

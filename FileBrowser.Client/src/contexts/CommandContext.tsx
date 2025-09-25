@@ -27,7 +27,7 @@ export type RenameRequest = {
 }
 
 export type RemoveRequest = {
-  pathes: string[],
+  paths: string[],
 }
 
 export function CommandContextProvider({

@@ -140,7 +140,7 @@ export default function DirectoryListItemComponent({ item }: Props) {
   const onRemoveModalSubmit = async () => {
     if (!removePath) return;
     const isSuccess = await remove({
-      pathes: [removePath]
+      paths: [removePath]
     });
     if (isSuccess) {
       onRemoveModalClose();

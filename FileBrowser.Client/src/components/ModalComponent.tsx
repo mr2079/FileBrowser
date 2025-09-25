@@ -6,6 +6,7 @@ type ModalProps = {
   onSubmit: () => void;
   onClose: () => void;
   children: ReactNode;
+  hasFooter?: boolean;
 };
 
 export default function ModalComponent({
@@ -14,26 +15,26 @@ export default function ModalComponent({
   onClose,
   title,
   children,
+  hasFooter = true,
 }: ModalProps) {
-    useEffect(() => {
-        if (!show) return;
+  useEffect(() => {
+    if (!show) return;
 
-        const handleKeyDown = (event: KeyboardEvent) => {
-            console.log(event.key)
-            if (event.key === "Escape") {
-                onClose();
-            }
-            if (event.key === "Enter") {
-                onSubmit();
-            }
-        }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+      if (event.key === "Enter") {
+        onSubmit();
+      }
+    };
 
-        window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-        // return () => {
-        //     window.removeEventListener("keydown", handleKeyDown);
-        // }
-    }, []);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <>
@@ -54,23 +55,25 @@ export default function ModalComponent({
                     <i className="ion ion-ios-close"></i>
                   </button>
                 </div>
-                {children && (<div className="modal-body">{children}</div>)}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={onClose}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={onSubmit}
-                  >
-                    Submit
-                  </button>
-                </div>
+                {children && <div className="modal-body">{children}</div>}
+                {hasFooter && (
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={onClose}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={onSubmit}
+                    >
+                      Submit
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -11,6 +11,8 @@ public class DirectoryService : IDirectoryService
 {
     private const string BaseDirectory = "Storage";
 
+    private readonly char[] _excludePrefixes = ['_', '.'];
+
     public Task<DirectoryDto> GetDirectoryAsync(string path)
     {
         DirectoryDto dto = new(path);
@@ -50,7 +52,14 @@ public class DirectoryService : IDirectoryService
             }
         }
 
-        var subDirectories = Directory.GetDirectories(fullPath);
+        var subDirectories = Directory
+            .GetDirectories(fullPath)
+            .Where(dir =>
+            {
+                string dirName = Path.GetFileName(dir);
+                return !_excludePrefixes.Any(prefix => dirName.StartsWith(prefix));
+            })
+            .ToArray();
 
         if (subDirectories?.Length > 0)
         {

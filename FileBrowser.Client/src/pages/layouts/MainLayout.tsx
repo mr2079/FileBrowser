@@ -5,6 +5,7 @@ import axios from "axios";
 import useDirectoryPath from "../../hooks/useDirectoryPath";
 import { useState } from "react";
 import ModalComponent from "../../components/ModalComponent";
+import UploadComponent, { type UploadStatus } from "../../components/UploadComponent";
 
 type FileCommandRequest = {
   commandType: string,
@@ -43,10 +44,10 @@ export default function MainLayout() {
     });
   }
 
-  const [show, setShow] = useState<boolean>(false);
+  const [showRemoveModal, setShowRemoveModal] = useState<boolean>(false);
 
   const handleRemoveClick = () => {
-    setShow(true);
+    setShowRemoveModal(true);
   }
 
   const onRemoveSubmit = async () => {
@@ -61,7 +62,25 @@ export default function MainLayout() {
   }
 
   const onRemoveClose = () => {
-    setShow(false);
+    setShowRemoveModal(false);
+  }
+
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+
+  const handleUploadClick = () => {
+    setShowUploadModal(true);
+  }
+
+  const onUploadClose = () => {
+    setShowUploadModal(false);
+  }
+
+  const handleUploadStatus = (status: UploadStatus) => {
+    console.log(status);
+    if (status.isCompleted) {
+      onUploadClose();
+      location.reload();
+    }
   }
 
   return (
@@ -70,7 +89,7 @@ export default function MainLayout() {
         <div className="container-m-nx container-m-ny bg-lightest mb-3">
           <div className="file-manager-actions container-p-x py-2">
             <div>
-              <button type="button" className="btn btn-primary mr-2" disabled>
+              <button type="button" className="btn btn-primary mr-2" onClick={handleUploadClick}>
                 <i className="ion ion-md-cloud-upload"></i>&nbsp; Upload
               </button>
               <button type="button" className="btn btn-secondary icon-btn mr-2" disabled>
@@ -158,10 +177,18 @@ export default function MainLayout() {
       </div>
       <ModalComponent
         title="Are you sure?"
-        show={show}
+        show={showRemoveModal}
         onSubmit={onRemoveSubmit}
         onClose={onRemoveClose}>
         {""}
+      </ModalComponent>
+      <ModalComponent
+        title="Upload file"
+        show={showUploadModal}
+        hasFooter={false}
+        onSubmit={() => {}}
+        onClose={onUploadClose}>
+        <UploadComponent onChangeStatus={handleUploadStatus}/>
       </ModalComponent>
     </>
   );

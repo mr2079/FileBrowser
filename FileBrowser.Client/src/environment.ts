@@ -5,6 +5,8 @@ const environment = {
   FILE_COMMAND_PATH: "/api/v1/files/command",
   FILE_RENAME_PATH: "/api/v1/files/rename",
   FILE_REMOVE_PATH: "/api/v1/files",
+  UPLOAD_CHUNK_PATH: "/api/v1/uploads/chunk",
+  MERGE_CHUNK_PATH: "/api/v1/uploads/merge",
 };
 
 export default environment;

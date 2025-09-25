@@ -9,11 +9,22 @@ public interface IFileService
     Task<bool> CommandAsync(FileCommandDto dto);
     Task<bool> RenameAsync(RenameDto dto);
     Task<bool> RemoveAsync(RemoveDto dto);
+    Task<bool> UploadChunkAsync(UploadChunkDto dto);
+    Task<bool> MergeChunkAsync(MergeChunkDto dto);
 }
 
 public class FileService : IFileService
 {
     private const string BaseDirectory = "Storage";
+    private const string TempDirectoryName = "_temp";
+    private const string UploadDirectoryName = "uploads";
+    private readonly string _tempDirectory;
+
+    public FileService()
+    {
+        string baseDirectory = GetBaseDirectory();
+        _tempDirectory = Path.Combine(baseDirectory, TempDirectoryName);
+    }
 
     public async Task<FileStream?> GetFileAsync(string path)
     {
@@ -118,7 +129,7 @@ public class FileService : IFileService
 
                 if (Directory.Exists(fullPath))
                 {
-                    Directory.Delete(fullPath);
+                    Directory.Delete(fullPath, true);
                 }
             }
 
@@ -127,6 +138,91 @@ public class FileService : IFileService
         catch (Exception)
         {
             return false;
+        }
+    }
+
+    public async Task<bool> UploadChunkAsync(UploadChunkDto dto)
+    {
+        if (!Directory.Exists(_tempDirectory))
+            Directory.CreateDirectory(_tempDirectory);
+
+        string chunkName = $"{dto.FileName}.part{dto.Index + 1}";
+
+        string chunkDirectoryPath = Path.Combine(_tempDirectory, UploadDirectoryName);
+
+        if (!Directory.Exists(chunkDirectoryPath))
+            Directory.CreateDirectory(chunkDirectoryPath);
+
+        try
+        {
+            string chunkPath = Path.Combine(chunkDirectoryPath, chunkName);
+
+            await using FileStream fs = new(chunkPath, FileMode.Create);
+
+            await dto.Chunk.CopyToAsync(fs);
+
+            return true;
+        }
+        catch (Exception)
+        {
+            var chunks = Directory
+                .GetFiles(chunkDirectoryPath, $"{dto.FileName}.*")
+                .ToList();
+
+            foreach (var chunk in chunks)
+            {
+                File.Delete(chunk);
+            }
+
+            return false;
+        }
+    }
+
+    public async Task<bool> MergeChunkAsync(MergeChunkDto dto)
+    {
+        string chunkPath = Path.Combine(
+            _tempDirectory,
+            UploadDirectoryName);
+
+        var chunks = Directory
+            .GetFiles(chunkPath, $"{dto.FileName}.*")
+            .OrderBy(file =>
+            {
+                int index = int.Parse(
+                    file.Split('.')[^1]
+                        .Replace("part", string.Empty));
+
+                return index;
+            })
+            .ToList();
+
+        try
+        {
+            string finalPath = Path.Combine(
+                GetBaseDirectory(),
+                dto.Path.TrimStart('/'),
+                dto.FileName);
+
+            await using FileStream fs = new(finalPath, FileMode.Create);
+
+            foreach (var chunk in chunks)
+            {
+                await using FileStream chunkStream = new(chunk, FileMode.Open);
+                await chunkStream.CopyToAsync(fs);
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+        finally
+        {
+            foreach (var chunk in chunks)
+            {
+                File.Delete(chunk);
+            }
         }
     }
 
